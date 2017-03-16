@@ -22,7 +22,7 @@ function varargout = ivlsm(varargin)
 
 % Edit the above text to modify the response to help vlsm
 
-% Last Modified by GUIDE v2.5 17-Oct-2016 14:31:17
+% Last Modified by GUIDE v2.5 16-Mar-2017 13:39:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -189,10 +189,32 @@ vlsm_normalization(handles);
 %--------------------------------------------------------------------------
 %  Parameters for Overlapping and Crosstab analysis
 %--------------------------------------------------------------------------
+function popupmenu_groupStat_Callback(hObject, eventdata, handles)
+global VLSM;
+
+index_input_data = get(hObject,'Value');
+
+if index_input_data == 1,
+    % Overlap map
+    VLSM.statMethods = 'overlap';
+    disp('Analysis methods: Create overlay map');
+elseif index_input_data == 2,
+    % Pearson's Chi-squared test
+    VLSM.statMethods = 'chi2test';
+    disp('Analysis methods: Pearson Chi2 Test');
+else
+    % Logistic regression (covariates are available)
+    VLSM.statMethods = 'logistic';
+    disp('Analysis methods: Logistic Regression');
+end
+
+
+
 function edit_groupVar_Callback(hObject, eventdata, handles)
 global VLSM;
 
 groupVar = get(hObject,'String');
+
 hdr = VLSM.subjinfo.hdr;
 dat = VLSM.subjinfo.dat;
 
@@ -214,6 +236,51 @@ else
 end
 
 set(handles.text_ngrp,'String',text_ngrp);
+
+
+function edit_covariates_Callback(hObject, eventdata, handles)
+global VLSM;
+% hObject    handle to edit_covariates (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if isempty(VLSM.inputFile),
+   disp('Select Subject List in Step1 ...'); 
+   return
+end
+
+covariateNames = strsplit(get(hObject,'String'),'\s*,\s*',...
+    'DelimiterType','RegularExpression');
+nsubj = VLSM.nsubj;
+hdr = VLSM.subjinfo.hdr;
+dat = VLSM.subjinfo.dat;
+
+nCovariates = 0;
+if isempty(covariateNames{1}),
+    covariateVars = [];
+    covariateNames = '';
+else
+    covariateVars = zeros(nsubj,0);
+    for i=1:length(covariateNames),
+        for j=1:length(hdr),
+            if strcmpi(covariateNames{i},hdr{j}),
+                covariateVars(:,i) = cell2mat(dat(:,j));
+                nCovariates = nCovariates+1;
+            end
+        end
+    end
+end
+
+VLSM.nCovariates = nCovariates;
+VLSM.covariate.values = covariateVars;
+if nCovariates>1,
+    VLSM.covariate.names = strjoin(covariateNames,'_');
+else
+    VLSM.covariate.names = covariateNames;
+end
+
+
+
 
 
 
@@ -254,18 +321,22 @@ end
 %--------------------------------------------------------------------------
 %  Overlay Buttons
 %--------------------------------------------------------------------------
-function pushbutton_overlay_Callback(hObject, eventdata, handles)
-set(handles.text_status,'String', 'Creating overlay image...'); pause(0.5);
-vlsm_overlay(handles);
+function pushbutton_runGroup_Callback(hObject, eventdata, handles)
+global VLSM
 
+if strcmpi(VLSM.statMethods,'overlap'),
+    set(handles.text_status,'String', 'Creating overlay map...'); pause(0.5);
+    vlsm_overlay(handles);
+elseif strcmpi(VLSM.statMethods,'chi2test'),
+    set(handles.text_status,'String', 'Performing Pearson Chi2 Test...'); pause(0.5);
+    vlsm_chi2tests(handles);
+elseif strcmpi(VLSM.statMethods,'logistic'),
+    set(handles.text_status,'String', 'Performing logistic regression...'); pause(0.5);
+    vlsm_logistic(handles);
+else
+    disp('Analysis methods - selection error');
+end
 
-
-%--------------------------------------------------------------------------
-%  Chi-Square Test Buttons
-%--------------------------------------------------------------------------
-function pushbutton_chi2test_Callback(hObject, eventdata, handles)
-set(handles.text_status,'String', 'Performing chi2test among groups...'); pause(0.5);
-vlsm_chi2tests(handles);
 
 
 %--------------------------------------------------------------------------
@@ -301,4 +372,3 @@ function pushbutton_thresholding_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_thresholding (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-

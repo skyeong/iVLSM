@@ -9,11 +9,16 @@ VLSM.modality = '';
 VLSM.doSeg = 0;
 
 % Initial values for correlation analysis
+VLSM.inputFile = [];
 VLSM.nMinSubj = 5;
+VLSM.nCovariates = 0;
+VLSM.covariate.values = [];
+VLSM.covariate.names = [];
 
 % Initialize values for statistical methods
 VLSM.statMethods = 'mw';
 
 % Group variable
 VLSM.groupVar = 'group';
+VLSM.statMethods = 'overlap';
 set(handles.edit_groupVar,'String',VLSM.groupVar);

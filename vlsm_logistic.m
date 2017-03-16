@@ -1,4 +1,4 @@
-function vlsm_chi2tests(handles)
+function vlsm_logistic(handles)
 global VLSM
 
 
@@ -10,7 +10,9 @@ catch
 end
 
 if ~strcmpi(spmver,'SPM12'),
-    disp('Addpath SPM12 toolbox directory');
+    text_status = sprintf('Error: Setpath SPM12 directory1');
+    set(handles.text_status,'String',text_status);
+    disp(text_status);
     return
 end
 spm('Defaults', 'fMRI');
@@ -21,16 +23,29 @@ DATApath = VLSM.DATApath;
 subjlist = VLSM.subjname;
 nsubj = length(subjlist);
 
-ROIfolder = VLSM.ROIfolder;
-ROIprefix = VLSM.ROIprefix;
-groupVar  = VLSM.groupVar;
-ngrp      = VLSM.ngrp;
+ROIfolder  = VLSM.ROIfolder;
+ROIprefix  = VLSM.ROIprefix;
+groupVar   = VLSM.groupVar;
+ngrp       = VLSM.ngrp;
 
-if ngrp<2,
+% Get Covariates from VLSM input
+nCovariates = VLSM.nCovariates;
+if nCovariates>0,
+    covariateVars = VLSM.covariate.values;
+    covariateNames = VLSM.covariate.names;
+else
+    covariateVars = [];
+    covariateNames = [];
+end
+
+
+
+if ngrp~=2,
     % Print Status on chi2test window
     pause(0.5);
-    text_status = sprintf('Error: No. of groups >= 2.');
+    text_status = sprintf('Error: No. of groups should be 2');
     set(handles.text_status,'String',text_status);
+    disp(text_status);
     return
 end
 
@@ -42,13 +57,18 @@ pause(0.2);
 
 
 % Output Path Setup
-OUTpath = fullfile(DATApath,'chi2test',groupVar); mkdir(OUTpath);
+if nCovariates>0,
+    OUTpath = fullfile(DATApath,['logistic_' covariateNames],groupVar); 
+else
+    OUTpath = fullfile(DATApath,'logistic',groupVar); 
+end
+mkdir(OUTpath);
 
 
 % Get Image information
 fn_tmp = sprintf('w%s%s.nii',ROIprefix, subjlist{1});
 fn_roi = fullfile(DATApath, ROIfolder, fn_tmp);
-if ~spm_existfile(fn_roi)  % check file existance
+if ~spm_existfile(fn_roi)
     pause(0.5);
     [p,f,e] = fileparts(fn_roi);
     text_status = sprintf('File "%s" does not exist.', [f e]);
@@ -58,6 +78,7 @@ if ~spm_existfile(fn_roi)  % check file existance
 end
 vref = spm_vol(fn_roi);
 idbrainmask = fmri_load_maskindex(vref);
+
 
 % Find Valid Voxels
 IMG = zeros(vref.dim);
@@ -94,15 +115,20 @@ for g=1:length(idg),
 end
 
 Pval = zeros(nvox,1);
-Chi2 = zeros(nvox,1);
+LL = zeros(nvox,1);
+UL = zeros(nvox,1);
+Beta = zeros(nvox,1);
+% parfor i=1:nvox,
 parfor i=1:nvox,
     dat = data(:,i);
-    [tbl,chi2,p] = crosstab(group, dat);
+    [B,dev,stats] = mnrfit([dat, covariateVars],group); % mnrfit(X,Y)
     % dat1 = dat(grp(1).idx);
     % dat2 = dat(grp(2).idx);
     % [p, chi2] = chi2tests(dat1, dat2);
-    Pval(i) = p;
-    Chi2(i) = chi2;
+    Pval(i) = stats.p(2);  % effects of lesion(yes/no) in predicting disease
+    LL(i) = stats.beta(2) - 1.96.*stats.se(2);
+    UL(i) = stats.beta(2) + 1.96.*stats.se(2);
+    Beta(i) = stats.beta(2);
 end
 
 
@@ -113,14 +139,36 @@ end
 % Get significant voxels
 ids = find(Pval<1);
 
-% Write Chi2 image
+
+% Write Upper-Limit image
 IMG = zeros(vref.dim);
-IMG(idvox(ids)) = Chi2(ids);
+IMG(idvox(ids)) = UL(ids);
 
 v = vref;
 v.dt = [16 0];
-v.fname = fullfile(OUTpath, 'crosstab_chi2.nii');
+v.fname = fullfile(OUTpath, 'logistic_UL.nii');
 spm_write_vol(v, IMG);
+
+
+% Write Lower-Limit image
+IMG = zeros(vref.dim);
+IMG(idvox(ids)) = LL(ids);
+
+v = vref;
+v.dt = [16 0];
+v.fname = fullfile(OUTpath, 'logistic_LL.nii');
+spm_write_vol(v, IMG);
+
+
+% Write Beta image
+IMG = zeros(vref.dim);
+IMG(idvox(ids)) = Beta(ids);
+
+v = vref;
+v.dt = [16 0];
+v.fname = fullfile(OUTpath, 'logistic_beta.nii');
+spm_write_vol(v, IMG);
+
 
 % Write -log10(Puncorr) image
 IMG = zeros(vref.dim);
@@ -128,7 +176,7 @@ IMG(idvox(ids)) = -log10(Pval(ids));
 
 v = vref;
 v.dt = [16 0];
-v.fname = fullfile(OUTpath, 'crosstab_log10_P_uncorr.nii');
+v.fname = fullfile(OUTpath, 'logistic_log10_P_uncorr.nii');
 spm_write_vol(v, IMG);
 
 
@@ -139,7 +187,7 @@ IMG(idvox(ids)) = -log10(adj_p(ids));
 
 v = vref;
 v.dt = [16 0];
-v.fname = fullfile(OUTpath, 'crosstab_log10_P_fdr.nii');
+v.fname = fullfile(OUTpath, 'logistic_log10_P_fdr.nii');
 spm_write_vol(v, IMG);
 
 
@@ -151,5 +199,5 @@ set(handles.pushbutton_runGroup,'BackgroundColor',[248 248 248]./256);
 
 % Print Status on chi2test window
 pause(0.5);
-text_status = sprintf('images of chi2test result were created.');
+text_status = sprintf('images of logistic regressions were created.');
 set(handles.text_status,'String',text_status);

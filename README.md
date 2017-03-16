@@ -7,6 +7,9 @@ Also, you can analyze lesion-symptom relationships.
 
 
 Update log:
+Ver 2.0 (March 16, 2017):
+Added logistic regression analysis
+
 Ver 1.1 (Feb. 22, 2017):
 Bug fix for p-value computation.
 

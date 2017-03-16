@@ -19,8 +19,8 @@ spm('Defaults', 'fMRI');
 
 
 % Change 'Run' button color
-set(handles.pushbutton_overlay,'ForegroundColor',[1 1 1]);
-set(handles.pushbutton_overlay,'BackgroundColor',[11 132 199]./256);
+set(handles.pushbutton_runGroup,'ForegroundColor',[1 1 1]);
+set(handles.pushbutton_runGroup,'BackgroundColor',[11 132 199]./256);
 pause(0.2);
 
 
@@ -45,6 +45,14 @@ OUTpath = fullfile(DATApath,'overlay',groupVar); mkdir(OUTpath);
 % Load reference
 fn_tmp = sprintf('w%s%s.nii',ROIprefix,subjlist{1});
 fn_roi = fullfile(DATApath, ROIfolder, fn_tmp);
+if ~spm_existfile(fn_roi)
+    pause(0.5);
+   	[p,f,e] = fileparts(fn_roi);
+    text_status = sprintf('File "%s" does not exist.', [f e]);
+    set(handles.text_status,'String',text_status);
+    disp(text_status);
+    return;
+end
 vref = spm_vol(fn_roi);
 idbrainmask = fmri_load_maskindex(vref);
 
@@ -98,8 +106,8 @@ spm_write_vol(v, Iout);
 
 
 % Change 'Run' button color to the original 
-set(handles.pushbutton_overlay,'ForegroundColor',[0 0 0]);
-set(handles.pushbutton_overlay,'BackgroundColor',[248 248 248]./256);
+set(handles.pushbutton_runGroup,'ForegroundColor',[0 0 0]);
+set(handles.pushbutton_runGroup,'BackgroundColor',[248 248 248]./256);
 
 pause(0.5);
 text_status = sprintf('overlay image was created.');
