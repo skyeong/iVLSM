@@ -1,15 +1,15 @@
 function varargout = ivlsm(varargin)
 % VLSM MATLAB code for vlsm.fig
-%      VLSM, by itself, creates a new VLSM or raises the existing
+%      iVLSM, by itself, creates a new VLSM or raises the existing
 %      singleton*.
 %
-%      H = VLSM returns the handle to a new VLSM or the handle to
+%      H = iVLSM returns the handle to a new VLSM or the handle to
 %      the existing singleton*.
 %
-%      VLSM('CALLBACK',hObject,eventData,handles,...) calls the local
+%      iVLSM('CALLBACK',hObject,eventData,handles,...) calls the local
 %      function named CALLBACK in VLSM.M with the given input arguments.
 %
-%      VLSM('Property','Value',...) creates a new VLSM or raises the
+%      iVLSM('Property','Value',...) creates a new VLSM or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before vlsm_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
@@ -22,7 +22,7 @@ function varargout = ivlsm(varargin)
 
 % Edit the above text to modify the response to help vlsm
 
-% Last Modified by GUIDE v2.5 16-Mar-2017 13:39:40
+% Last Modified by GUIDE v2.5 17-Mar-2017 10:09:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -245,8 +245,8 @@ global VLSM;
 % handles    structure with handles and user data (see GUIDATA)
 
 if isempty(VLSM.inputFile),
-   disp('Select Subject List in Step1 ...'); 
-   return
+    disp('Select Subject List in Step1 ...');
+    return
 end
 
 covariateNames = strsplit(get(hObject,'String'),'\s*,\s*',...
@@ -278,10 +278,6 @@ if nCovariates>1,
 else
     VLSM.covariate.names = covariateNames;
 end
-
-
-
-
 
 
 %--------------------------------------------------------------------------

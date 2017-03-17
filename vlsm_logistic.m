@@ -58,9 +58,9 @@ pause(0.2);
 
 % Output Path Setup
 if nCovariates>0,
-    OUTpath = fullfile(DATApath,['logistic_' covariateNames],groupVar); 
+    OUTpath = fullfile(DATApath,['logistic_' covariateNames],groupVar);
 else
-    OUTpath = fullfile(DATApath,'logistic',groupVar); 
+    OUTpath = fullfile(DATApath,'logistic',groupVar);
 end
 mkdir(OUTpath);
 
@@ -106,25 +106,18 @@ for c=1:nsubj,
 end
 
 
-% Extract Groups
+%----------------------------------------------------
+%  Group Variable 
+%----------------------------------------------------
 group = VLSM.group;
-idg = unique(group);
-grp = struct([]);
-for g=1:length(idg),
-    grp(g).idx = find(group==g);
-end
 
 Pval = zeros(nvox,1);
 LL = zeros(nvox,1);
 UL = zeros(nvox,1);
 Beta = zeros(nvox,1);
-% parfor i=1:nvox,
 parfor i=1:nvox,
     dat = data(:,i);
     [B,dev,stats] = mnrfit([dat, covariateVars],group); % mnrfit(X,Y)
-    % dat1 = dat(grp(1).idx);
-    % dat2 = dat(grp(2).idx);
-    % [p, chi2] = chi2tests(dat1, dat2);
     Pval(i) = stats.p(2);  % effects of lesion(yes/no) in predicting disease
     LL(i) = stats.beta(2) - 1.96.*stats.se(2);
     UL(i) = stats.beta(2) + 1.96.*stats.se(2);
