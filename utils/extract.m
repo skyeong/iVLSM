@@ -264,8 +264,8 @@ for c=1:nsubj,
     status_message = sprintf('[%03d/%03d] Extract from %s...',c,nsubj,subjname);
     set(handles.text_status,'String',status_message); pause(0.5);
     
-    imgName = sprintf('wl%s.nii', subjname);
-    fn_roi = fullfile(lesionImgPath,imgName);
+    imgName = sprintf('^wl.*.%s.nii', subjname);
+    fn_roi = spm_select('FPList',lesionImgPath,imgName);
     
     VOL = spm_vol(fn_roi);
     IMG = spm_read_vols(VOL);
