@@ -333,7 +333,6 @@ end
 
 fmt = repmat('%.2f,',1,nROIimgs);
 fmt(end) = ''; fmt = ['%s,' fmt, '\n'];
-
 for c=1:nsubj,
     subjname = subjlist{c};
     fprintf(fid, fmt, subjname, LesionPct(c,:));
