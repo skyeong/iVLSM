@@ -264,7 +264,7 @@ for c=1:nsubj,
     status_message = sprintf('[%03d/%03d] Extract from %s...',c,nsubj,subjname);
     set(handles.text_status,'String',status_message); pause(0.5);
     
-    imgName = sprintf('^wl.*.%s.nii', subjname);
+    imgName = sprintf('^w.*.%s.nii', subjname);
     fn_roi = spm_select('FPList',lesionImgPath,imgName);
     
     VOL = spm_vol(fn_roi);
@@ -301,8 +301,8 @@ for i=1:nROIimgs,
     figure;
     bar(grplabel,meanVal(:,i),'FaceColor',[0.7 0.7 0.7],'barwidth',.9); hold on;
     for g=1:ngrp,
-        ylower  = meanVal(g,:)-serrVal(g,:);
-        yhigher = meanVal(g,:)+serrVal(g,:);
+        ylower  = meanVal(g,i)-serrVal(g,i);
+        yhigher = meanVal(g,i)+serrVal(g,i);
         line([grplabel(g), grplabel(g)],[ylower, yhigher],'LineWidth',3,'Color','r');
     end
     xlabel(groupVar{1},'FontSize',12);
